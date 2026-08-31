@@ -1,0 +1,63 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": {"major": 3, "minor": 24, "patch": 0},
+  "configurePresets": [
+    {
+      "name": "linux-base",
+      "hidden": true,
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "condition": {"type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux"},
+      "cacheVariables": {"BUILD_TESTING": "ON", "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"}
+    },
+    {
+      "name": "cpu-debug", "inherits": "linux-base",
+      "displayName": "Linux CPU-only Debug",
+      "cacheVariables": {"CMAKE_BUILD_TYPE": "Debug", "KERNELLAB_ENABLE_CUDA": "OFF"}
+    },
+    {
+      "name": "cpu-release", "inherits": "cpu-debug",
+      "displayName": "Linux CPU-only Release",
+      "cacheVariables": {"CMAKE_BUILD_TYPE": "Release"}
+    },
+    {
+      "name": "cuda-release", "inherits": "linux-base",
+      "displayName": "Linux CUDA Release (local GPU)",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release", "KERNELLAB_ENABLE_CUDA": "ON",
+        "KERNELLAB_ENABLE_GPU_TESTS": "ON", "CMAKE_CUDA_ARCHITECTURES": "native"
+      }
+    },
+    {
+      "name": "cuda-debug", "inherits": "cuda-release",
+      "displayName": "Linux CUDA with host debug symbols",
+      "cacheVariables": {"CMAKE_BUILD_TYPE": "RelWithDebInfo"}
+    },
+    {
+      "name": "cuda-sm89", "inherits": "cuda-release",
+      "displayName": "RTX 4090D / sm_89",
+      "cacheVariables": {"CMAKE_CUDA_ARCHITECTURES": "89"}
+    },
+    {
+      "name": "cuda-sm121", "inherits": "cuda-release",
+      "displayName": "GB10 / sm_121 (toolkit must support sm_121)",
+      "cacheVariables": {"CMAKE_CUDA_ARCHITECTURES": "121"}
+    }
+  ],
+  "buildPresets": [
+    {"name": "cpu-debug", "configurePreset": "cpu-debug"},
+    {"name": "cpu-release", "configurePreset": "cpu-release"},
+    {"name": "cuda-release", "configurePreset": "cuda-release"},
+    {"name": "cuda-debug", "configurePreset": "cuda-debug"},
+    {"name": "cuda-sm89", "configurePreset": "cuda-sm89"},
+    {"name": "cuda-sm121", "configurePreset": "cuda-sm121"}
+  ],
+  "testPresets": [
+    {"name": "cpu-debug", "configurePreset": "cpu-debug", "output": {"outputOnFailure": true}, "execution": {"noTestsAction": "error"}},
+    {"name": "cpu-release", "configurePreset": "cpu-release", "output": {"outputOnFailure": true}, "execution": {"noTestsAction": "error"}},
+    {"name": "cuda-release", "configurePreset": "cuda-release", "output": {"outputOnFailure": true}, "execution": {"noTestsAction": "error"}},
+    {"name": "cuda-debug", "configurePreset": "cuda-debug", "output": {"outputOnFailure": true}, "execution": {"noTestsAction": "error"}},
+    {"name": "cuda-sm89", "configurePreset": "cuda-sm89", "output": {"outputOnFailure": true}, "execution": {"noTestsAction": "error"}},
+    {"name": "cuda-sm121", "configurePreset": "cuda-sm121", "output": {"outputOnFailure": true}, "execution": {"noTestsAction": "error"}}
+  ]
+}

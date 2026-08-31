@@ -67,3 +67,10 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+docs/
+
+# Local machine settings and measured experiment results
+CMakeUserPresets.json
+reports/results/
+__pycache__/
+.venv/

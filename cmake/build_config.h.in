@@ -1,0 +1,4 @@
+#pragma once
+
+#define KERNELLAB_VERSION "@PROJECT_VERSION@"
+#cmakedefine01 KERNELLAB_ENABLE_CUDA
