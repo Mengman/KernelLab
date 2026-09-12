@@ -4,6 +4,12 @@ kernellab_target_options(runtime_tests)
 add_test(NAME runtime.unit COMMAND runtime_tests)
 set_tests_properties(runtime.unit PROPERTIES LABELS cpu)
 
+add_executable(bench_stats_tests unit/bench_stats_tests.cpp)
+target_link_libraries(bench_stats_tests PRIVATE gpulab::bench_stats)
+kernellab_target_options(bench_stats_tests)
+add_test(NAME bench.stats COMMAND bench_stats_tests)
+set_tests_properties(bench.stats PROPERTIES LABELS cpu)
+
 if(TARGET tiny_transformer_model)
   add_executable(transformer_config_tests unit/transformer_config_tests.cpp)
   target_link_libraries(transformer_config_tests PRIVATE gpulab::transformer)
