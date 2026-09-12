@@ -1,0 +1,28 @@
+# KernelLab development image.
+#
+# The base image ships a CUDA 13.4 devel toolchain (nvcc, sm_121 included) but no
+# CMake and no Python 3. The project requires both:
+#   - CMake >= 3.24 with the Unix Makefiles generator (Ubuntu 24.04 provides 3.28).
+#   - Python 3 for tests/cli_contract.py; without it CTest silently omits the
+#     CLI contract tests and the suite is not actually complete.
+#
+# Build:
+#   docker build -f docker/Dockerfile.dev -t kernellab-dev:cu13.4 .
+#
+# Run (persistent container, repository bind-mounted at /workspace):
+#   docker run -d --name kernellab --gpus all --ipc=host \
+#     --ulimit memlock=-1 --ulimit stack=67108864 \
+#     -v "$PWD":/workspace -w /workspace kernellab-dev:cu13.4 sleep infinity
+#
+# The --ipc=host and --ulimit flags are the values the base image recommends for CUDA.
+#
+# Verify a session with:
+#   docker exec kernellab bash -lc 'nvcc --version && cmake --version && python3 --version'
+
+FROM nvcr.io/nvidia/cuda-dl-base:26.08-cuda13.4-devel-ubuntu24.04
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends cmake make python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
