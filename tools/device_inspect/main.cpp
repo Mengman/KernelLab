@@ -5,6 +5,7 @@
 #include <exception>
 #include <iostream>
 #include <string_view>
+#include <string>
 
 int main(int argc, char** argv) {
   bool as_json = false;
@@ -31,7 +32,9 @@ int main(int argc, char** argv) {
                 << gpulab::json_quote(gpulab::version()) << ",\"cuda_compiled\":"
                 << (gpulab::cuda_compiled() ? "true" : "false") << ",\"status\":"
                 << gpulab::json_quote(inventory.status) << ",\"message\":"
-                << gpulab::json_quote(inventory.message) << ",\"devices\":[";
+                << gpulab::json_quote(inventory.message) << ",\"cuda_driver_version\":"
+                << (inventory.cuda_driver_version ? std::to_string(*inventory.cuda_driver_version) : "null") << ",\"cuda_runtime_version\":"
+                << (inventory.cuda_runtime_version ? std::to_string(*inventory.cuda_runtime_version) : "null") << ",\"devices\":[";
       bool first = true;
       for (const auto& device : inventory.devices) {
         if (!first) { std::cout << ','; }

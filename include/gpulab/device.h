@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace gpulab {
 struct DeviceInfo {
@@ -22,6 +23,8 @@ struct DeviceInventory {
   // ready: at least one GPU. Other runtime errors throw, never silently skip.
   std::string status;
   std::string message;
+  std::optional<int> cuda_driver_version;
+  std::optional<int> cuda_runtime_version;
   std::vector<DeviceInfo> devices;
 };
 

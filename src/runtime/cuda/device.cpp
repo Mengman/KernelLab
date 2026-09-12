@@ -12,7 +12,21 @@ DeviceInventory query_devices() {
   if (count == 0) {
     return {"unavailable", "No CUDA devices detected.", {}};
   }
-  DeviceInventory inventory{"ready", "CUDA devices detected.", {}};
+
+  int cuda_driver_version = 0;
+  const auto driverResult = cudaDriverGetVersion(&cuda_driver_version);
+  if (driverResult != cudaSuccess) {
+    return {"unavailable", cudaGetErrorString(driverResult), {}};
+  }
+
+  int cuda_runtime_version = 0;
+  const auto cudaResult = cudaRuntimeGetVersion(&cuda_runtime_version);
+  if (cudaResult != cudaSuccess) {
+    return {"unavailable", cudaGetErrorString(cudaResult), {}};
+  }
+
+  DeviceInventory inventory{
+      "ready", "CUDA devices detected.", cuda_driver_version, cuda_runtime_version, {}};
   for (int index = 0; index < count; ++index) {
     cudaDeviceProp properties{};
     detail::cuda_check(cudaGetDeviceProperties(&properties, index), "cudaGetDeviceProperties");
