@@ -16,7 +16,7 @@ __global__ void fma_kernel(const float *a, const float *b, float *c, std::size_t
   }
 }
 
-void launch_fma_kernel(const float *a, const float *b, float *c, std::size_t n) {
-  fma_kernel<<<2, 256>>>(a, b, c, n);
+void launch_fma_kernel(const float *a, const float *b, float *c, std::size_t n, int grid_size) {
+  fma_kernel<<<grid_size, 256>>>(a, b, c, n);
   CUDA_CHECK(cudaGetLastError());
 }

@@ -11,6 +11,11 @@ if(KERNELLAB_ENABLE_CUDA)
 	target_link_libraries(p01_test_fma PRIVATE p01_fma)
 	kernellab_target_options(p01_test_fma)
 
+	add_executable(p01_bench_fma p01/bench_fma.cpp)
+	target_link_libraries(p01_bench_fma PRIVATE p01_fma)
+	target_link_libraries(p01_bench_fma PRIVATE gpulab::bench_stats)
+	kernellab_target_options(p01_bench_fma)
+
 	add_executable(p01_bench_h2d p01/bench_h2d.cpp)
 	target_link_libraries(p01_bench_h2d PRIVATE CUDA::cudart)
 	target_link_libraries(p01_bench_h2d PRIVATE gpulab::bench_stats)
