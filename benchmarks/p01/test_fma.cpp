@@ -32,7 +32,7 @@ bool run_case(std::size_t n, bool random_input) {
     CUDA_CHECK(cudaMemcpy(d_c, initial_c.data(), bytes, cudaMemcpyHostToDevice));
   }
 
-  launch_fma_kernel(d_a, d_b, d_c, n);
+  launch_fma_kernel(d_a, d_b, d_c, n, 2);
   CUDA_CHECK(cudaDeviceSynchronize());
 
   std::vector<float> actual(n);
