@@ -4,21 +4,19 @@
 #include "cuda_check.h"
 #include "gpulab/bench/stats.h"
 
-void benchmark_h2d(std::size_t bytes) {
+int benchmark_d2h(std::size_t bytes) {
   unsigned char *h_data = nullptr;
   unsigned char *d_data = nullptr;
 
   CUDA_CHECK(cudaMallocHost(&h_data, bytes));
   CUDA_CHECK(cudaMalloc(&d_data, bytes));
 
-  for (std::size_t i = 0; i < bytes; i++) {
-    h_data[i] = 1;
-  }
+  CUDA_CHECK(cudaMemset(d_data, 1, bytes));
 
   constexpr int warmup = 20;
 
   for (int i = 0; i < warmup; ++i) {
-    CUDA_CHECK(cudaMemcpyAsync(d_data, h_data, bytes, cudaMemcpyHostToDevice, 0));
+    CUDA_CHECK(cudaMemcpyAsync(h_data, d_data, bytes, cudaMemcpyDeviceToHost, 0));
   }
 
   CUDA_CHECK(cudaStreamSynchronize(0));
@@ -34,7 +32,7 @@ void benchmark_h2d(std::size_t bytes) {
   for (int i = 0; i < iteration; ++i) {
     CUDA_CHECK(cudaEventRecord(start, 0));
 
-    CUDA_CHECK(cudaMemcpyAsync(d_data, h_data, bytes, cudaMemcpyHostToDevice, 0));
+    CUDA_CHECK(cudaMemcpyAsync(h_data, d_data, bytes, cudaMemcpyDeviceToHost, 0));
 
     CUDA_CHECK(cudaEventRecord(stop, 0));
     CUDA_CHECK(cudaEventSynchronize(stop));
@@ -42,6 +40,13 @@ void benchmark_h2d(std::size_t bytes) {
     float elapsed_ms = 0.0f;
     CUDA_CHECK(cudaEventElapsedTime(&elapsed_ms, start, stop));
     samples.push_back(elapsed_ms);
+  }
+
+  for (std::size_t i = 0; i < bytes; ++i) {
+    if (h_data[i] != 1) {
+      std::cout << "data copy device to host error: index " << i << " != 1" << std::endl;
+      return 1;
+    }
   }
 
   CUDA_CHECK(cudaEventDestroy(start));
@@ -52,19 +57,25 @@ void benchmark_h2d(std::size_t bytes) {
 
   const auto stats = gpulab::bench::summarize(samples);
 
-  std::cout << "Min: " << stats.min << "ms\nMedian: "  << stats.median << "ms" << std::endl;
+  std::cout << "Min: " << stats.min << "ms\nMedian: " << stats.median << "ms" << std::endl;
   float bandwidth = bytes / (stats.median * 1000000);
-  std::cout << "H2D effective bandwidth: " << bandwidth << "GB/s" << std::endl;
+  std::cout << "D2H effective bandwidth: " << bandwidth << "GB/s" << std::endl;
+
+  return 0;
 }
 
 int main() {
   std::cout << "test 1MiB\n";
-  benchmark_h2d(1024 * 1024);
+
+  if (benchmark_d2h(1024 * 1024) != 0)
+    return 1;
 
   std::cout << "test 16MiB\n";
-  benchmark_h2d(1024 * 1024 * 16);
+  if (benchmark_d2h(1024 * 1024 * 16) != 0)
+    return 1;
 
   std::cout << "test 256MiB\n";
-  benchmark_h2d(1024 * 1024 * 256);
+  if (benchmark_d2h(1024 * 1024 * 256) != 0)
+    return 1;
   return 0;
 }
