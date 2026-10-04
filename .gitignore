@@ -68,6 +68,7 @@ vcpkg_installed/
 Testing/
 .cache/
 docs/
+reports/
 
 # Local machine settings and measured experiment results
 CMakeUserPresets.json
