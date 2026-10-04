@@ -16,8 +16,9 @@ project_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 destination="${1%/}/"
 
 # The trailing slash copies project contents into the destination directory.
-# Keep remote build outputs and other remote-only files intact (no --delete).
-rsync -avz --protect-args -e ssh \
+# Delete remote files absent locally after transfer completes.
+# Excluded paths (including remote build outputs) remain protected from deletion.
+rsync -avz --delete-delay --protect-args -e ssh \
   --exclude='.git/' \
   --exclude='build/' \
   --exclude='Build/' \
