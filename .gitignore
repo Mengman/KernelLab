@@ -67,7 +67,6 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
-docs/
 reports/
 
 # Local machine settings and measured experiment results
