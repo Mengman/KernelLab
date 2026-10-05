@@ -20,7 +20,7 @@
 | benchmarks/CMakeLists.txt | 显式添加已经完成的文件与目标 |
 | reports/p02.md | 环境、结果、分析与复现命令 |
 
-先在作业目录实验，不提前移入公共库。复用 gpulab::bench_stats；CUDA_CHECK 可暂时包含 ../p01/cuda_check.h，不要求本题重构公共错误处理。
+先在作业目录实验，不提前移入公共库。复用 gpulab::bench_stats；CUDA 目标链接 `gpulab::cuda_check`，并包含 `gpulab/cuda_check.h` 使用 `CUDA_CHECK`，不依赖 P01 目录。
 
 ## 按步骤完成
 

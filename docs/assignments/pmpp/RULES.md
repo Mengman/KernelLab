@@ -23,7 +23,7 @@
 
 实现放 benchmarks/pXX/（PA 为 benchmarks/pa/），公共接口 .h 不含 CUDA 依赖，CPU reference 单独 .cpp，GPU 实现 .cu，测试和 benchmark 各有独立入口。每题有指定模块名，用模块名.h、模块名_cpu.cpp、模块名.cu。只有测试并确实要复用的实现才移入公共库。
 
-通常将 CPU 与 GPU 代码建成库，独立程序链接它们；统计复用 gpulab::bench_stats。CUDA 错误处理可暂时复用 P01 的 cuda_check.h；今后需要公共化时再统一迁移，不要求复制到每题。
+通常将 CPU 与 GPU 代码建成库，独立程序链接它们；统计复用 gpulab::bench_stats。CUDA 目标链接 `gpulab::cuda_check`，包含 `gpulab/cuda_check.h` 使用 `CUDA_CHECK`；公共头文件位于 `include/gpulab/cuda_check.h`，不复制到每题，也不从其他题目目录包含。
 
 题目约定 pXX_test 和 pXX_bench 作为未来目标名（PA 对应 pa_test/pa_bench）。P01/P02 保留已经布置的名称。只把实际完成的源文件显式加入 CMake，不用 GLOB 扫描空文件，不在当前工程提前创建所有目标。文档出现的未来目标命令须等对应 target 实现后执行。P06/P23 为报告整合题，复用原程序，不强行新建可执行程序。
 

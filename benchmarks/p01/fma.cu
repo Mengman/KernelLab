@@ -1,4 +1,4 @@
-#include "cuda_check.h"
+#include "gpulab/cuda_check.h"
 #include "fma.h"
 
 void fma_host(const float *a, const float *b, float *c, std::size_t n) {

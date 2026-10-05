@@ -3,7 +3,7 @@
 #include <random>
 #include <vector>
 
-#include "cuda_check.h"
+#include "gpulab/cuda_check.h"
 #include "fma.h"
 
 bool run_case(std::size_t n, bool random_input) {

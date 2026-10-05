@@ -10,3 +10,6 @@ trim_trailing_whitespace = true
 
 [*.md]
 trim_trailing_whitespace = false
+
+[*.{c,cc,cpp,cxx,h,hh,hpp,hxx,cu,cuh}]
+indent_size = 4

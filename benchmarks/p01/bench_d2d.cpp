@@ -1,7 +1,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "cuda_check.h"
+#include "gpulab/cuda_check.h"
 #include "gpulab/bench/stats.h"
 
 int benchmark_d2d(std::size_t bytes) {

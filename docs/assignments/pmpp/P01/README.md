@@ -32,7 +32,7 @@ GB10 主机把 cuda-sm89 换成 cuda-sm121。把输出保存为 reports/results/
 ## 需要修改的文件
 
 - benchmarks/p01/fma.h、fma.cu：CPU reference、GPU kernel 与启动接口。
-- benchmarks/p01/cuda_check.h：CUDA 错误检查。
+- include/gpulab/cuda_check.h：公共 CUDA 错误检查；CUDA 目标链接 gpulab::cuda_check。
 - benchmarks/p01/test_fma.cpp：独立正确性测试。
 - benchmarks/p01/bench_h2d.cpp、bench_d2h.cpp、bench_d2d.cpp、bench_fma.cpp：独立测速程序。
 - benchmarks/CMakeLists.txt

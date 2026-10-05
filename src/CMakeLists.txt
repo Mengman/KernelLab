@@ -6,6 +6,11 @@ target_include_directories(gpulab_runtime PUBLIC
 )
 kernellab_target_options(gpulab_runtime)
 if(KERNELLAB_ENABLE_CUDA)
+  add_library(gpulab_cuda_check INTERFACE)
+  add_library(gpulab::cuda_check ALIAS gpulab_cuda_check)
+  target_include_directories(gpulab_cuda_check INTERFACE "${PROJECT_SOURCE_DIR}/include")
+  target_link_libraries(gpulab_cuda_check INTERFACE CUDA::cudart)
+
   target_sources(gpulab_runtime PRIVATE runtime/cuda/device.cpp runtime/cuda/smoke.cu)
   target_link_libraries(gpulab_runtime PRIVATE CUDA::cudart)
   set_target_properties(gpulab_runtime PROPERTIES CUDA_RUNTIME_LIBRARY Shared)
