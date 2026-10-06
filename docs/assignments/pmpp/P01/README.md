@@ -50,7 +50,7 @@ P01 已由单一 main.cpp 拆为库、测试和四个 benchmark，使用现有�
 ./build/cuda-sm89/bin/p01_bench_fma
 ```
 
-当前 4090D 部分已完成，GB10 未测。教学和实验遵循 [统一规则](../RULES.md)，实现由学习者完成，指导者按阶段检查。
+当前 4090D 和 GB10 部分均已完成；GB10 于 2026-10-06 在 spark 的 kernellab 容器中补测，环境、结果与证据见 reports/p01.md。教学和实验遵循 [统一规则](../RULES.md)，实现由学习者完成，指导者按阶段检查。
 
 ## CUDA 工具练习
 
