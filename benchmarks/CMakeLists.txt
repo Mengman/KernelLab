@@ -46,6 +46,7 @@ if(KERNELLAB_ENABLE_CUDA)
 	kernellab_target_options(p02_axpby_gpu)
 
 	add_executable(p02_test_axpby_gpu p02/test_axpby_gpu.cpp)
-	target_link_libraries(p02_test_axpby_gpu PRIVATE p02_axpby_gpu)
+	target_link_libraries(p02_test_axpby_gpu PRIVATE
+        p02_axpby_gpu p02_axpby_cpu gpulab::test_support)
 	kernellab_target_options(p02_test_axpby_gpu)
 endif()
