@@ -66,6 +66,10 @@ vcpkg_installed/
 
 # test output & cache
 Testing/
+!include/gpulab/testing/
+!include/gpulab/testing/**
+!src/testing/
+!src/testing/**
 .cache/
 
 # Local machine settings and measured experiment results

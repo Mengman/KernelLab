@@ -8,11 +8,11 @@ if(KERNELLAB_ENABLE_CUDA)
 	kernellab_target_options(p01_fma)
 
 	add_executable(p01_test_fma p01/test_fma.cpp)
-	target_link_libraries(p01_test_fma PRIVATE p01_fma)
+	target_link_libraries(p01_test_fma PRIVATE p01_fma gpulab::test_support)
 	kernellab_target_options(p01_test_fma)
 
 	add_executable(p01_bench_fma p01/bench_fma.cpp)
-	target_link_libraries(p01_bench_fma PRIVATE p01_fma)
+	target_link_libraries(p01_bench_fma PRIVATE p01_fma gpulab::test_support)
 	target_link_libraries(p01_bench_fma PRIVATE gpulab::bench_stats)
 	kernellab_target_options(p01_bench_fma)
 
@@ -30,5 +30,22 @@ if(KERNELLAB_ENABLE_CUDA)
 	target_link_libraries(p01_bench_d2d PRIVATE gpulab::cuda_check)
 	target_link_libraries(p01_bench_d2d PRIVATE gpulab::bench_stats)
 	kernellab_target_options(p01_bench_d2d)
+endif()
 
+add_library(p02_axpby_cpu STATIC p02/axpby_cpu.cpp)
+kernellab_target_options(p02_axpby_cpu)
+
+add_executable(p02_test_axpby p02/test_axpby.cpp)
+target_link_libraries(p02_test_axpby PRIVATE p02_axpby_cpu gpulab::test_support)
+kernellab_target_options(p02_test_axpby)
+
+
+if(KERNELLAB_ENABLE_CUDA)
+	add_library(p02_axpby_gpu STATIC p02/axpby.cu)
+	target_link_libraries(p02_axpby_gpu PUBLIC gpulab::cuda_check)
+	kernellab_target_options(p02_axpby_gpu)
+
+	add_executable(p02_test_axpby_gpu p02/test_axpby_gpu.cpp)
+	target_link_libraries(p02_test_axpby_gpu PRIVATE p02_axpby_gpu)
+	kernellab_target_options(p02_test_axpby_gpu)
 endif()
