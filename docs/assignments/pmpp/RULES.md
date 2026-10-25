@@ -27,7 +27,7 @@
 
 题目约定 pXX_test 和 pXX_bench 作为未来目标名（PA 对应 pa_test/pa_bench）。P01/P02 保留已经布置的名称。只把实际完成的源文件显式加入 CMake，不用 GLOB 扫描空文件，不在当前工程提前创建所有目标。文档出现的未来目标命令须等对应 target 实现后执行。P06/P23 为报告整合题，复用原程序，不强行新建可执行程序。
 
-CPU reference、纯 CPU 测试使用 cpu-debug，无 CUDA 依赖。GPU target 只在 KERNELLAB_ENABLE_CUDA 开启时构建。正确性程序接入 CTest 时，CPU 测试与 GPU 测试区分；GPU 测试受 KERNELLAB_ENABLE_GPU_TESTS 控制。可通过明确 --cpu-only/--gpu 模式拆分注册，或者使用两个测试程序，不能让 CPU-only 的通过被解释为 GPU 已测试。复用项目缺少 GPU 时退出码 77 的约定。
+CPU reference、纯 CPU 测试使用 cpu-debug，无 CUDA 依赖。GPU target 只在 KERNELLAB_ENABLE_CUDA 开启时构建。正确性程序接入 CTest 时，CPU 测试与 GPU 测试区分；GPU 测试受 KERNELLAB_ENABLE_GPU_TESTS 控制。注册位置、`pXX.cpu` / `pXX.gpu` 命名、必须给的测试属性和运行命令见 [项目说明第 6 节](../README.md)。可通过明确 --cpu-only/--gpu 模式拆分注册，或者使用两个测试程序，不能让 CPU-only 的通过被解释为 GPU 已测试。复用项目缺少 GPU 时退出码 77 的约定。
 
 ## 正确性
 

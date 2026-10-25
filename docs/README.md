@@ -198,6 +198,109 @@ JSON `schema_version=1` 的状态有 `disabled`（未编译 CUDA）、`unavailab
 `tiny_transformer --generate`、`gpulab_bench --run gemm` 当前会明确报错，不产生虚构结果。
 测试不依赖 `assert`，因此 Release/NDEBUG 下仍会检查。
 
+### 单元测试接入 CTest 的约定
+
+CTest（CMake 自带的测试运行器：启动可执行文件、按退出码判定通过、按标签和名称筛选）只负责编排，不提供断言写法；用例的判断逻辑仍写在测试程序自己里，用返回值和退出码表达结果。
+
+- 实现与 target 留在 `benchmarks/pXX/`，**注册统一写在 `tests/CMakeLists.txt`**。这样 CPU 用例在任何机器都能跑，GPU 用例能用 `-L gpu` 单独选出来。
+- 用例名固定 `pXX.cpu` / `pXX.gpu`；target 名固定 `pXX_test_<模块>` / `pXX_bench_<模块>`。
+- CPU 用例给 `LABELS cpu` 和 `TIMEOUT`；GPU 用例给 `LABELS gpu`、`SKIP_RETURN_CODE 77` 和 `TIMEOUT`。
+- 两条注册都要套 `if(TARGET ...)` 守卫：CPU-only 的配置根本没构建 GPU target，不守卫就会注册出不存在的命令。
+- **benchmark 程序不注册**。三条原因：CTest 没有数值阈值语义，写死阈值必然被其他进程和功耗状态干扰而误报；`ctest --parallel` 并发跑测会抢 GPU，计时失真；性能数字属于 `reports/`，不属于 CI 红绿灯。benchmark 程序的参数与退出码契约可以注册成极小条目（参照已有的 `${tool}.help`）。
+
+接入新一题时整块复制，改名字和超时：
+
+```cmake
+# tests/CMakeLists.txt
+if(TARGET p03_test_filter)
+  add_test(NAME p03.cpu COMMAND p03_test_filter)
+  set_tests_properties(p03.cpu PROPERTIES LABELS cpu TIMEOUT 30)
+endif()
+
+if(KERNELLAB_ENABLE_GPU_TESTS AND TARGET p03_test_filter_gpu)
+  add_test(NAME p03.gpu COMMAND p03_test_filter_gpu)
+  set_tests_properties(p03.gpu PROPERTIES LABELS gpu SKIP_RETURN_CODE 77 TIMEOUT 120)
+endif()
+```
+
+### 用 CTest 跑这些测试
+
+```bash
+cmake --build --preset cpu-debug --parallel   # 必须先全量构建
+ctest --preset cpu-debug                      # 跑全部
+ctest --preset cpu-debug -N                   # 只列用例名，不执行
+ctest --preset cpu-debug -R p02               # 名字正则过滤，只跑 p02.*
+ctest --preset cpu-debug -L cpu               # 只跑标签 cpu 的用例
+ctest --preset cuda-sm89 -L gpu               # 在 4090D 主机上跑 GPU 用例
+```
+
+下面三条比红绿灯更容易骗人，判读结果时先看它们：
+
+- **Skipped 不等于通过**。GPU 用例拿不到设备时按约定返回 77，CTest 显示 Skipped，这只说明环境不具备。
+- **Not Run 表示没构建**，不是断言失败。只构建单个 target 之后跑 ctest，其他用例会报 `Not Run`；先全量构建再看结果。
+- **`-L gpu` 在没有 GPU 用例的配置上会以错误退出**（退出码 8，输出 `No tests were found!!!`）。测试预设设了 `"noTestsAction": "error"`，所以这是“没匹配到用例”，不是测试失败。
+
+CI 只跑 CPU：`.github/workflows/cpu.yml` 执行 `ctest --preset cpu-debug` 和 `ctest --preset cpu-release`。所以 GPU 用例**必须**挂 `gpu` 标签，否则会把流水线判红。GPU 测试开关还要求 CUDA 已开启，否则配置阶段直接失败（`CMakeLists.txt:26`：`GPU tests require KERNELLAB_ENABLE_CUDA=ON.`）。
+
+本机实测（WSL Ubuntu 24.04，无 GPU，CPU 预设）：`ctest --preset cpu-debug` 为 13/13 通过，其中 `p02.cpu` 是第 13 条；`ctest --preset cpu-release` 同样 13/13。`p01.gpu` 只验证了“CPU-only 配置下不被注册”这一半，带 GPU 的那一半**未测**，需要在 4090D 上用 `ctest --preset cuda-sm89 -L gpu` 复验。
+
+### CPU 与 GPU 环境分别怎么跑
+
+哪些用例会被注册，完全由配置预设决定（`CMakePresets.json`）：
+
+| 预设 | `KERNELLAB_ENABLE_CUDA` | `KERNELLAB_ENABLE_GPU_TESTS` | 注册的用例 |
+|---|---|---|---|
+| `cpu-debug` / `cpu-release` | OFF | 默认 OFF | 只有 `LABELS cpu`（含 `pXX.cpu`） |
+| `cuda-release` / `cuda-debug` / `cuda-sm89` / `cuda-sm121` | ON | ON | `cpu` 与 `gpu` 全部 |
+
+**CPU-only 配置不会引入 CUDA 编译流程**，本机实测（这台机器根本没装 nvcc）：`.cu.o` 目标文件 0 个；12 个 `link.txt` 里包含 cuda 的 0 个；`flags.make` 里包含 cuda 的 0 个；cache 里没有 `CMAKE_CUDA_COMPILER` 项；配置输出里跟 CUDA 有关的只有项目自己打印的两行状态。代码根据是 `KERNELLAB_ENABLE_CUDA` 为 OFF 时根本不执行 `include(cmake/EnableCUDA.cmake)`，而 `.cu` 目标全部写在 `if(KERNELLAB_ENABLE_CUDA)` 块里。
+
+反过来，在没有 Toolkit 的机器上误用 CUDA 预设会直接失败，不会默默退化到 CPU（这是故意的）：
+
+```text
+CMake Error at cmake/EnableCUDA.cmake:12 (message):
+  CUDA was requested but nvcc was not found.  Install a supported Linux CUDA
+  toolkit, set -DCMAKE_CUDA_COMPILER=/path/to/nvcc, or use cmake --preset
+  cpu-debug.  An installed NVIDIA driver alone is not a CUDA toolkit.
+```
+
+**CPU 机器（开发机、CI）**：
+
+```bash
+cmake --preset cpu-debug
+cmake --build --preset cpu-debug --parallel
+ctest --preset cpu-debug            # 全部 CPU 用例
+ctest --preset cpu-debug -R p02     # 只跑某一题
+ctest --preset cpu-release          # Release 下也要真检查（测试不用 assert）
+```
+
+**GPU 机器（4090D）**：
+
+```bash
+cmake --preset cuda-sm89
+cmake --build --preset cuda-sm89 --parallel
+ctest --preset cuda-sm89 -L cpu     # 先确认 CPU 路径在这台机器上也没退化
+ctest --preset cuda-sm89 -L gpu     # 再跑设备用例
+ctest --preset cuda-sm89            # 全部
+```
+
+四条注意：
+
+- 在 CUDA 预设下不加 `-L` 会把 CPU 和 GPU 用例一起跑；想单独重跑设备用例就加 `-L gpu`。
+- GPU 机器上也应该跑一次 `-L cpu`。同一台机器上 CPU 路径退化是最容易漏的回归。
+- 两台机器各自配置和构建，不共用 `build/` 目录与可执行文件。
+- Compute Sanitizer 不放进 CTest（会让整套变慢且报告混杂），单独手动跑：`compute-sanitizer --tool memcheck ./build/cuda-sm89/bin/p02_test_axpby_gpu`。
+
+
+### 新接入一题的检查清单
+
+- [ ] target 在 `benchmarks/pXX/`，注册在 `tests/CMakeLists.txt`，两处都显式列文件名，不用 GLOB。
+- [ ] 用例名是 `pXX.cpu` / `pXX.gpu`，外面套 `if(TARGET ...)`。
+- [ ] CPU 用例 `LABELS cpu`；GPU 用例 `LABELS gpu` + `SKIP_RETURN_CODE 77` + `TIMEOUT`。
+- [ ] 测试程序不依赖 `assert`（Release 的 `NDEBUG` 会把它消掉），失败必须传导到非 0 退出码。
+- [ ] 全量构建后 `ctest --preset cpu-debug` 与 `ctest --preset cpu-release` 都通过。
+- [ ] benchmark 程序不进 CTest，输出用 `2>&1 | tee reports/results/pXX-bench.txt` 保存。
+
 ## 7. 从哪里开始
 
 下一步是 [P01](docs/assignments/pmpp/P01/README.md)：扩展设备档案并自行实现吞吐 microbenchmark。
